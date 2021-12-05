@@ -10,7 +10,8 @@ const app = express()
 app.get('/', (request, response) => response.sendStatus(200))
 app.listen(process.env.PORT)
 
-const { ACCOUNT_NAME, PASSWORD, SHARED_SECRET, STEAM_API_KEY } = process.env
+const { ACCOUNT_NAME, PASSWORD, SHARED_SECRET, STEAM_API_KEY, APPS_ID } =
+  process.env
 
 const keyMirror = (array) => (
   (object = {}), array.forEach((element) => (object[element] = element)), object
@@ -29,6 +30,7 @@ new (class NotIsPlague extends SteamUser {
     super({ dataDirectory: null })
 
     this.playStateBlocked = false
+    this.appsID = APPS_ID.split(',').map((gameID) => +gameID)
 
     this.logOn({
       accountName: ACCOUNT_NAME,
@@ -58,7 +60,9 @@ new (class NotIsPlague extends SteamUser {
 
     this.setPersona(SteamUser.EPersonaState.Online)
     this.periodicallyPlayGames(
-      games.map(({ appid, name }) => ({ appID: appid, name }))
+      games
+        .filter(({ appid }) => this.appsID.includes(appid))
+        .map(({ appid, name }) => ({ appID: appid, name }))
     )
   }
 
